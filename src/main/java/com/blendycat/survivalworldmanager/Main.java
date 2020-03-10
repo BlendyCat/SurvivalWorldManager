@@ -1,6 +1,7 @@
 package com.blendycat.survivalworldmanager;
 
 import com.blendycat.survivalworldmanager.listeners.PlayerListener;
+import com.blendycat.survivalworldmanager.npc.SleeperTrait;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
@@ -35,6 +36,7 @@ public class Main extends JavaPlugin {
             }
         }
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+        net.citizensnpcs.api.CitizensAPI.getTraitFactory().registerTrait(net.citizensnpcs.api.trait.TraitInfo.create(SleeperTrait.class).withName("sleeper-trait"));
     }
 
     @Override
