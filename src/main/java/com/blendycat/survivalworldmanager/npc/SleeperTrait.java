@@ -1,7 +1,11 @@
 package com.blendycat.survivalworldmanager.npc;
 
+import com.blendycat.survivalworldmanager.Main;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.util.DataKey;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
@@ -12,6 +16,7 @@ public class SleeperTrait extends Trait {
     private double health;
     private int hunger;
     private double saturation;
+    private boolean teamAdded = false;
 
     public SleeperTrait() {
         super("sleeper-trait");
@@ -75,4 +80,15 @@ public class SleeperTrait extends Trait {
         saturation = key.getDouble("saturation");
     }
 
+    @Override
+    public void run() {
+        if(!teamAdded && npc.getEntity() != null) {
+            Main.getInternalTeam().addEntry(npc.getName());
+        }
+    }
+
+    @Override
+    public void onDespawn() {
+        Main.getInternalTeam().removeEntry(npc.getName());
+    }
 }

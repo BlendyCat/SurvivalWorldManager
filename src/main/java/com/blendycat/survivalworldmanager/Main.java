@@ -8,13 +8,18 @@ import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.scoreboard.Team;
 
 import java.util.List;
+import java.util.Objects;
 
 public class Main extends JavaPlugin {
 
     private static FileConfiguration config;
     public static Main instance;
+    private static Team internalTeam;
 
     @Override
     public void onEnable() {
@@ -36,12 +41,12 @@ public class Main extends JavaPlugin {
             }
         }
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+        createInternalTeam();
         net.citizensnpcs.api.CitizensAPI.getTraitFactory().registerTrait(net.citizensnpcs.api.trait.TraitInfo.create(SleeperTrait.class).withName("sleeper-trait"));
     }
 
     @Override
     public void onDisable() {
-
     }
 
     public static World getMainWorld() {
@@ -50,5 +55,25 @@ public class Main extends JavaPlugin {
             return Bukkit.getWorld(worldName);
         }
         return null;
+    }
+
+    private void createInternalTeam() {
+        String teamName = "swm-sleepers";
+        ScoreboardManager scoreboardManager = Bukkit.getScoreboardManager();
+        if(scoreboardManager != null) {
+            Scoreboard scoreboard = scoreboardManager.getMainScoreboard();
+            Team team = scoreboard.getTeam(teamName);
+
+            if(team == null) {
+                team = scoreboard.registerNewTeam(teamName);
+            }
+
+            team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+            internalTeam = team;
+        }
+    }
+
+    public static Team getInternalTeam() {
+        return internalTeam;
     }
 }

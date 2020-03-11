@@ -21,6 +21,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.scoreboard.Team;
 
 import java.util.*;
 
@@ -106,7 +107,6 @@ public class PlayerListener implements Listener {
                 playerEquipment.setItemInOffHand(equipment.get(Equipment.EquipmentSlot.OFF_HAND));
                 //playerEquipment.setItemInMainHand(equipment.get(Equipment.EquipmentSlot.HAND));
             }
-
             npc.despawn();
             CitizensAPI.getNPCRegistry().deregister(npc);
         } else {
@@ -140,7 +140,6 @@ public class PlayerListener implements Listener {
         // Player entity = (Player) npc.getEntity();
         PlayerInventory playerInv = player.getInventory();
         EntityEquipment equipment = player.getEquipment();
-
         // Custom trait to store sleeper's uuid and experience
         SleeperTrait sleeperTrait = new SleeperTrait();
         sleeperTrait.linkToNPC(npc);
@@ -149,13 +148,13 @@ public class PlayerListener implements Listener {
         sleeperTrait.setHealth(player.getHealth());
         sleeperTrait.setHunger(player.getFoodLevel());
         sleeperTrait.setSaturation(player.getSaturation());
-
+        // add the sleeper trait to the npc
         npc.addTrait(sleeperTrait);
-
+        // copy the player's inventory to the sleeper npc
         Inventory npcInv = npc.getTrait(Inventory.class);
         Equipment npcEquipment = npc.getTrait(Equipment.class);
         npcInv.setContents(playerInv.getStorageContents());
-
+        // copy the player's equipment to the sleeper npc
         if(equipment != null) {
             npcEquipment.set(Equipment.EquipmentSlot.BOOTS, equipment.getBoots());
             npcEquipment.set(Equipment.EquipmentSlot.LEGGINGS, equipment.getLeggings());
@@ -164,6 +163,7 @@ public class PlayerListener implements Listener {
             //npcEquipment.set(Equipment.EquipmentSlot.HAND, equipment.getItemInMainHand());
             npcEquipment.set(Equipment.EquipmentSlot.OFF_HAND, equipment.getItemInOffHand());
         }
+        // clear the players inventory and set their experience to 0
         player.getInventory().clear();
         player.setTotalExperience(0);
     }
@@ -185,21 +185,15 @@ public class PlayerListener implements Listener {
         if(npc.getEntity() instanceof Player) {
             if(npc.hasTrait(SleeperTrait.class)) {
                 SleeperTrait trait = npc.getTrait(SleeperTrait.class);
-                Player player = (Player) npc.getEntity();
 
                 e.setDroppedExp(trait.getTotalExperience());
 
                 Inventory inv = npc.getTrait(Inventory.class);
-                Equipment equipment = npc.getTrait(Equipment.class);
 
                 e.getDrops().clear();
                 e.getDrops().addAll(Arrays.asList(inv.getContents()));
-                /*e.getDrops().add(equipment.get(1));
-                e.getDrops().add(equipment.get(2));
-                e.getDrops().add(equipment.get(3));
-                e.getDrops().add(equipment.get(4));
-                e.getDrops().add(equipment.get(5));*/
 
+                npc.despawn();
                 CitizensAPI.getNPCRegistry().deregister(npc);
             }
         }

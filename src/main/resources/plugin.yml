@@ -1,5 +1,5 @@
 version: 0.0.1
-api-version: 1.15
+api-version: '1.15'
 depend: [Citizens]
 main: com.blendycat.survivalworldmanager.Main
 name: SurvivalWorldManager
