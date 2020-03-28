@@ -4,16 +4,13 @@ import com.blendycat.survivalworldmanager.Main;
 import com.blendycat.survivalworldmanager.npc.SleeperTrait;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.event.NPCDeathEvent;
-import net.citizensnpcs.api.event.NPCDespawnEvent;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Equipment;
 import net.citizensnpcs.api.trait.trait.Inventory;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
-import org.bukkit.block.Block;
+import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,7 +18,6 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.scoreboard.Team;
 
 import java.util.*;
 
@@ -59,16 +55,6 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
-        /*// Check first if the player has a bed spawn location
-        if(player.getBedSpawnLocation() != null) {
-            // This will be where they spawn if they have a bed
-            player.teleport(player.getBedSpawnLocation());
-        } else {
-            World world = Main.getMainWorld();
-            if(world != null) {
-                player.teleport(getRandomLocation(player, world));
-            }
-        }*/
         UUID uuid = player.getUniqueId();
         NPC npc = null;
         for (NPC npcI : CitizensAPI.getNPCRegistry()) {
@@ -195,6 +181,16 @@ public class PlayerListener implements Listener {
 
                 npc.despawn();
                 CitizensAPI.getNPCRegistry().deregister(npc);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlaceLavaBucket(PlayerBucketEmptyEvent e) {
+        if(e.getBlock().getType() == Material.LAVA) {
+            Levelled lava = (Levelled) e.getBlock().getBlockData();
+            if(lava.getLevel() == 0) {
+                e.setCancelled(true);
             }
         }
     }
