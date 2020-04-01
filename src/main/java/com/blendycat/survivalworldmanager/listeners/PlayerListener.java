@@ -4,19 +4,23 @@ import com.blendycat.survivalworldmanager.Main;
 import com.blendycat.survivalworldmanager.npc.SleeperTrait;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.event.NPCDeathEvent;
+import net.citizensnpcs.api.event.NPCRightClickEvent;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Equipment;
 import net.citizensnpcs.api.trait.trait.Inventory;
+import net.citizensnpcs.api.trait.trait.Spawned;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import java.util.*;
@@ -69,44 +73,48 @@ public class PlayerListener implements Listener {
 
         if(npc != null) {
             SleeperTrait trait = npc.getTrait(SleeperTrait.class);
-            Equipment equipment = npc.getTrait(Equipment.class);
-            Inventory inventory = npc.getTrait(Inventory.class);
+            if(!trait.isDead()) {
+                Equipment equipment = npc.getTrait(Equipment.class);
+                Inventory inventory = npc.getTrait(Inventory.class);
 
-            player.teleport(npc.getStoredLocation());
-            player.setTotalExperience(trait.getTotalExperience());
-            player.setHealth(trait.getHealth());
-            player.setFoodLevel(trait.getHunger());
-            player.setSaturation((float) trait.getSaturation());
+                player.teleport(npc.getStoredLocation());
+                player.setTotalExperience(trait.getTotalExperience());
+                player.setHealth(trait.getHealth());
+                player.setFoodLevel(trait.getHunger());
+                player.setSaturation((float) trait.getSaturation());
 
-            PlayerInventory playerInv = player.getInventory();
-            for(int i = 0; i < inventory.getContents().length && i < 36; i++) {
-                playerInv.setItem(i, inventory.getContents()[i]);
-            }
+                PlayerInventory playerInv = player.getInventory();
+                for (int i = 0; i < inventory.getContents().length && i < 36; i++) {
+                    playerInv.setItem(i, inventory.getContents()[i]);
+                }
 
-            EntityEquipment playerEquipment = player.getEquipment();
+                EntityEquipment playerEquipment = player.getEquipment();
 
-            if(playerEquipment != null) {
-                playerEquipment.setBoots(equipment.get(Equipment.EquipmentSlot.BOOTS));
-                playerEquipment.setLeggings(equipment.get(Equipment.EquipmentSlot.LEGGINGS));
-                playerEquipment.setChestplate(equipment.get(Equipment.EquipmentSlot.CHESTPLATE));
-                playerEquipment.setHelmet(equipment.get(Equipment.EquipmentSlot.HELMET));
-                playerEquipment.setItemInOffHand(equipment.get(Equipment.EquipmentSlot.OFF_HAND));
-                //playerEquipment.setItemInMainHand(equipment.get(Equipment.EquipmentSlot.HAND));
+                if (playerEquipment != null) {
+                    playerEquipment.setBoots(equipment.get(Equipment.EquipmentSlot.BOOTS));
+                    playerEquipment.setLeggings(equipment.get(Equipment.EquipmentSlot.LEGGINGS));
+                    playerEquipment.setChestplate(equipment.get(Equipment.EquipmentSlot.CHESTPLATE));
+                    playerEquipment.setHelmet(equipment.get(Equipment.EquipmentSlot.HELMET));
+                    playerEquipment.setItemInOffHand(equipment.get(Equipment.EquipmentSlot.OFF_HAND));
+                    //playerEquipment.setItemInMainHand(equipment.get(Equipment.EquipmentSlot.HAND));
+                }
+                HumanEntity npcEntity = (HumanEntity) npc.getEntity();
+                player.setHealth(npcEntity.getHealth());
+            } else {
+                player.sendMessage("You were killed while offline!");
+                player.setHealth(20);
+                player.setFoodLevel(20);
+                player.setSaturation(20);
+                World world = Main.getMainWorld();
+                if(world != null) {
+                    player.teleport(world.getSpawnLocation());
+                }
             }
             npc.despawn();
             CitizensAPI.getNPCRegistry().deregister(npc);
         } else {
-            if (player.hasPlayedBefore()) {
-                player.incrementStatistic(Statistic.DEATHS);
-                player.sendMessage("You were killed while offline!");
-            }
-            World world = Main.getMainWorld();
-            if (world != null) {
-                if (player.getBedSpawnLocation() != null) {
-                    player.teleport(player.getBedSpawnLocation());
-                } else {
-                    player.teleport(getRandomLocation(world));
-                }
+            if(!player.hasPlayedBefore()) {
+                e.setJoinMessage(ChatColor.LIGHT_PURPLE + "Welcome " + player.getName() + " to BlendyCraft!");
             }
         }
     }
@@ -155,17 +163,6 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerRespawn(PlayerRespawnEvent e) {
-        Player player = e.getPlayer();
-        if(player.getBedSpawnLocation() == null) {
-            World world = Main.getMainWorld();
-            if(world != null) {
-                e.setRespawnLocation(getRandomLocation(world));
-            }
-        }
-    }
-
-    @EventHandler
     public void onNPCDeath(NPCDeathEvent e){
         NPC npc = e.getNPC();
         if(npc.getEntity() instanceof Player) {
@@ -180,8 +177,22 @@ public class PlayerListener implements Listener {
                 e.getDrops().addAll(Arrays.asList(inv.getContents()));
 
                 npc.despawn();
-                CitizensAPI.getNPCRegistry().deregister(npc);
+                trait.setDead(true);
+                inv.setContents(new ItemStack[inv.getContents().length]);
+                Spawned spawned = npc.getTrait(Spawned.class);
+                spawned.setSpawned(false);
             }
+        }
+    }
+
+    @EventHandler
+    public void onNPCInteract(NPCRightClickEvent e) {
+        Player player = e.getClicker();
+        NPC npc = e.getNPC();
+        if(npc.hasTrait(SleeperTrait.class)) {
+            SleeperTrait trait = npc.getTrait(SleeperTrait.class);
+            Inventory inv = npc.getTrait(Inventory.class);
+            inv.openInventory(player);
         }
     }
 
@@ -193,25 +204,5 @@ public class PlayerListener implements Listener {
                 e.setCancelled(true);
             }
         }
-    }
-
-    public Location getRandomLocation(World world) {
-        List<Biome> forbiddenBiomes = Arrays.asList(FORBIDDEN_BIOMES);
-        WorldBorder border = world.getWorldBorder();
-        Location center = border.getCenter();
-        int size = (int) border.getSize();
-        Random random = new Random();
-        int x;
-        int z;
-        Biome biome;
-        do {
-            x = random.nextInt(size) - size / 2;
-            z = random.nextInt(size) - size / 2;
-            biome = world.getBiome(x, 50, z);
-        } while (forbiddenBiomes.contains(biome));
-        int y = world.getMaxHeight() - 1;
-        while(world.getBlockAt(x, y, z).getType() == Material.AIR && y > 0) y--;
-
-        return new Location(world, x, y+1, z);
     }
 }

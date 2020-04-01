@@ -1,8 +1,8 @@
 worlds:
   world:
-    border-size: 1000
+    border-size: 10000
   world_nether:
-    border-size: 1000
+    border-size: 10000
   world_the_end:
-    border-size: 1000
+    border-size: 10000
 main-world: world

@@ -3,9 +3,6 @@ package com.blendycat.survivalworldmanager.npc;
 import com.blendycat.survivalworldmanager.Main;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.util.DataKey;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
@@ -16,10 +13,11 @@ public class SleeperTrait extends Trait {
     private double health;
     private int hunger;
     private double saturation;
-    private boolean teamAdded = false;
+    private boolean dead;
 
     public SleeperTrait() {
         super("sleeper-trait");
+        dead = false;
     }
 
     public UUID getUUID() {
@@ -62,6 +60,14 @@ public class SleeperTrait extends Trait {
         this.saturation = saturation;
     }
 
+    public void setDead(boolean isDead) {
+        dead = isDead;
+    }
+
+    public boolean isDead() {
+        return dead;
+    }
+
     @Override
     public void save(DataKey key) {
         key.setString("uuid", uuid.toString());
@@ -69,6 +75,7 @@ public class SleeperTrait extends Trait {
         key.setDouble("health", health);
         key.setInt("hunger", hunger);
         key.setDouble("saturation", saturation);
+        key.setBoolean("dead", dead);
     }
 
     @Override
@@ -78,11 +85,12 @@ public class SleeperTrait extends Trait {
         health = key.getDouble("health");
         hunger = key.getInt("hunger");
         saturation = key.getDouble("saturation");
+        dead = key.getBoolean("dead");
     }
 
     @Override
     public void run() {
-        if(!teamAdded && npc.getEntity() != null) {
+        if(npc.getEntity() != null) {
             Main.getInternalTeam().addEntry(npc.getName());
         }
     }

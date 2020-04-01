@@ -3,7 +3,6 @@ package com.blendycat.survivalworldmanager;
 import com.blendycat.survivalworldmanager.listeners.PlayerListener;
 import com.blendycat.survivalworldmanager.npc.SleeperTrait;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -11,10 +10,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.scoreboard.Team;
-
-import java.util.List;
-import java.util.Objects;
-
 public class Main extends JavaPlugin {
 
     private static FileConfiguration config;
@@ -41,7 +36,7 @@ public class Main extends JavaPlugin {
             }
         }
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
-        createInternalTeam();
+        createInternalTeams();
         net.citizensnpcs.api.CitizensAPI.getTraitFactory().registerTrait(net.citizensnpcs.api.trait.TraitInfo.create(SleeperTrait.class).withName("sleeper-trait"));
     }
 
@@ -57,7 +52,7 @@ public class Main extends JavaPlugin {
         return null;
     }
 
-    private void createInternalTeam() {
+    private void createInternalTeams() {
         String teamName = "swm-sleepers";
         ScoreboardManager scoreboardManager = Bukkit.getScoreboardManager();
         if(scoreboardManager != null) {
